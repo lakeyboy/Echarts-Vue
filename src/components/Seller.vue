@@ -1,6 +1,6 @@
 <template>
   <div class="com-container">
-    <div class="com-chart" ref="seller_ref">1</div>
+    <div class="com-chart" ref="seller_ref"></div>
   </div>
 </template>
 
@@ -19,14 +19,86 @@ export default {
   mounted() {
     this.initChart()
     this.getData()
+    // 监听屏幕变化
+    window.addEventListener('resize', this.screenAdapter)
+    //首次加载完成时，就进行屏幕的适配
+    this.screenAdapter()
   },
   destroyed() {
     clearInterval(this.timerId)
+    //组件销毁时，取消监听事件，防止内存泄漏
+    window.removeEventListener('resize', this.screenAdapter)
   },
   methods: {
     //初始化echartd对象,第二个参数是主题
     initChart() {
       this.chartInstance = this.$echarts.init(this.$refs.seller_ref, 'chalk')
+      // 分开设置option,首先是初始option的设置
+      const initOption = {
+        title: {
+          text: '▍商家销售数据统计',
+          left: 20,
+          top: 20
+        },
+        // 设置坐标轴位置
+        grid: {
+          top: '15%',
+          left: '3%',
+          right: '6%',
+          bottom: '3%',
+          //距离计算时是否把文字也包含进图表
+          containLabel: true
+        },
+        xAxis: {
+          type: 'value'
+        },
+        yAxis: {
+          //data的数据需要是数组
+          type: 'category'
+        },
+        //鼠标经过时提示
+        tooltip: {
+          //触发条件
+          trigger: 'axis',
+          //延时
+          axisPointer: {
+            type: 'line',
+            z: 0,
+            lineStyle: {
+              color: '#2d3443'
+            }
+          }
+        },
+        series: [
+          {
+            type: 'bar',
+            label: {
+              show: true,
+              position: 'right',
+              textStyle: {
+                color: 'white'
+              }
+            },
+            itemStyle: {
+              //指明颜色渐变的方向(x0,y0,x1,y1)
+              //指明不同百分比之下的颜色的值
+              //下面表示使用渐变颜色
+              color: new this.$echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                // 不同%值下的颜色值
+                {
+                  offset: 0,
+                  color: '#5052ee'
+                },
+                {
+                  offset: 1,
+                  color: '#ab6ee5'
+                }
+              ])
+            }
+          }
+        ]
+      }
+      this.chartInstance.setOption(initOption)
       //监听鼠标的移动
       this.chartInstance.on('mouseover', () => {
         clearInterval(this.timerId)
@@ -65,79 +137,19 @@ export default {
       const sellerValues = showData.map((item) => {
         return item.value
       })
-      const option = {
-        title: {
-          text: '▍商家销售数据统计',
-          textStyle: {
-            fontSize: 50
-          },
-          left: 20,
-          top: 20
-        },
-        // 设置坐标轴位置
-        grid: {
-          top: '15%',
-          left: '3%',
-          right: '6%',
-          bottom: '3%',
-          //距离计算时是否把文字也包含进图表
-          containLabel: true
-        },
-        xAxis: {
-          type: 'value'
-        },
+      //数据相关的 option
+      const dataOption = {
         yAxis: {
           //data的数据需要是数组
-          type: 'category',
           data: sellerNames
-        },
-        //鼠标经过时提示
-        tooltip: {
-          //触发条件
-          trigger: 'axis',
-          //延时
-          axisPointer: {
-            type: 'line',
-            z: 0,
-            lineStyle: {
-              width: 66,
-              color: '#2d3443'
-            }
-          }
         },
         series: [
           {
-            type: 'bar',
-            data: sellerValues,
-            barWidth: 66,
-            label: {
-              show: true,
-              position: 'right',
-              textStyle: {
-                color: 'white'
-              }
-            },
-            itemStyle: {
-              barBorderRadius: [0, 33, 33, 0],
-              //指明颜色渐变的方向(x0,y0,x1,y1)
-              //指明不同百分比之下的颜色的值
-              //下面表示使用渐变颜色
-              color: new this.$echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                // 不同%值下的颜色值
-                {
-                  offset: 0,
-                  color: '#5052ee'
-                },
-                {
-                  offset: 1,
-                  color: '#ab6ee5'
-                }
-              ])
-            }
+            data: sellerValues
           }
         ]
       }
-      this.chartInstance.setOption(option)
+      this.chartInstance.setOption(dataOption)
     },
     // 设置定时切换数据
     startInterval() {
@@ -153,6 +165,40 @@ export default {
         //更新图表
         this.updateChart()
       }, 5000)
+    },
+    //屏幕变化函数，完成屏幕适配
+    screenAdapter() {
+      const titleFontSize = (this.$refs.seller_ref.offsetWidth / 100) * 3.6
+      //和分辨率大小相关的配置
+      const adapterOption = {
+        title: {
+          textStyle: {
+            fontSize: titleFontSize
+          }
+        },
+        //鼠标经过时提示
+        tooltip: {
+          //延时
+          axisPointer: {
+            lineStyle: {
+              width: titleFontSize
+            }
+          }
+        },
+        series: [
+          {
+            barWidth: titleFontSize,
+
+            itemStyle: {
+              //当设置为宽度一半时就会是圆角效果
+              barBorderRadius: [0, titleFontSize / 2, titleFontSize / 2, 0]
+            }
+          }
+        ]
+      }
+      this.chartInstance.setOption(adapterOption)
+      //还需要手动调用图标的resize  才能产生效果,不调用不会随着屏幕实时发生变化
+      this.chartInstance.resize()
     }
   }
 }
