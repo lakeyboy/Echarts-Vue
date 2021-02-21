@@ -2,6 +2,7 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import SellerPage from '@/views/SellerPage'  //@表示src目录
 import TrendPage from '@/views/TrendPage'  //@表示src目录
+import MapPage from '@/views/MapPage'
 
 Vue.use(VueRouter)
 
@@ -13,6 +14,10 @@ const routes = [
   {
     path: '/trendpage',  //输入地址后要跳转的组件
     component: TrendPage
+  },
+  {
+    path: '/mappage',  //输入地址后要跳转的组件
+    component: MapPage
   }
 ]
 
