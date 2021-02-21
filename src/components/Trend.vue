@@ -1,14 +1,25 @@
 <template>
   <!-- 模板中 最外层只有 -->
   <div class="com-container">
-    <div class="title">
-      <span>标题</span>
+    <div class="title" :style="comStyle">
+      <span>{{ '▍' + showTitle }}</span>
       <!-- 类名就是导入的css字体名称 -->
-      <span class="iconfont title-icon">&#xe6eb;</span>
-      <div class="select-con">
-        <div class="select-item">选择标题1</div>
-        <div class="select-item">选择标题2</div>
-        <div class="select-item">选择标题3</div>
+      <span
+        class="iconfont title-icon"
+        @click="showChoice = !showChoice"
+        :style="comStyle"
+        >&#xe6eb;</span
+      >
+      <div class="select-con" v-show="showChoice" :style="marginStyle">
+        <div
+          class="select-item"
+          v-for="item in selectTypes"
+          :key="item.key"
+          @click="handleSelect(item.key)"
+        >
+          <!-- 冒号加属性名表示动态属性绑定 -->
+          {{ item.text }}
+        </div>
       </div>
     </div>
     <!-- 显示图表的div对象 -->
@@ -21,7 +32,11 @@ export default {
   data() {
     return {
       chartInstance: null,
-      allData: null
+      allData: null,
+      showChoice: false,
+      choiceType: 'map',
+      // 文字尺寸
+      titleFontSize: 0
     }
   },
   //生命周期函数，组件创建时执行
@@ -38,7 +53,39 @@ export default {
     window.removeEventListener('resize', this.screenAdapter)
   },
   // 增加计算属性保存下拉菜单  的数据
-  computed: {},
+  computed: {
+    //下拉菜单的数据
+    selectTypes() {
+      if (!this.allData) {
+        return []
+      } else {
+        // return 可以返回一个对象{ }
+        return this.allData.type.filter((item) => {
+          return item.key !== this.choiceType
+        })
+      }
+    },
+    showTitle() {
+      if (!this.allData) {
+        return ''
+      } else {
+        return this.allData[this.choiceType].title
+      }
+    },
+    // 设置标题文字大小
+    comStyle() {
+      return {
+        fontSize: this.titleFontSize + 'px'
+      }
+    },
+    // 控制左边margin
+    marginStyle() {
+      return {
+        // 左边间距正好是一个字体
+        marginLeft: this.titleFontSize / 1.5 + 'px'
+      }
+    }
+  },
   methods: {
     initChart() {
       //初始化后会返回一个实例对象
@@ -102,7 +149,7 @@ export default {
       // 获取类目轴数据，即是x轴
       const timeArr = this.allData.common.month
       //y轴数据   series数据
-      const valueArr = this.allData.map.data
+      const valueArr = this.allData[this.choiceType].data
       const seriesArr = valueArr.map((item, index) => {
         return {
           //每个折线都需要配置,是为了和图表的数据对应起来
@@ -110,7 +157,7 @@ export default {
           type: 'line',
           data: item.data,
           //stack 设置为同一个值就会产生堆叠效果，堆叠图是以 前一个值为起点
-          stack: 'map',
+          stack: this.choiceType,
           //设置折线面积颜色
           // 可以为空,也可以设置渐变颜色
           areaStyle: {
@@ -148,10 +195,27 @@ export default {
     },
     //屏幕尺寸变化
     screenAdapter() {
-      const adapterOption = {}
+      this.titleFontSize = (this.$refs.trend_ref.offsetWidth / 100) * 3.6
+      const adapterOption = {
+        legend: {
+          itemWidth: this.titleFontSize,
+          itemHeight: this.titleFontSize,
+          itemGap: this.titleFontSize,
+          textStyle: {
+            //表示图例字体大小
+            fontSize: this.titleFontSize / 1.5
+          }
+        }
+      }
       this.chartInstance.setOption(adapterOption)
       //必须调用实例对象的resize方法，才会实时变化
       this.chartInstance.resize()
+    },
+
+    handleSelect(currentType) {
+      this.choiceType = currentType
+      this.updateChart()
+      this.showChoice = false
     }
   }
 }
@@ -169,5 +233,13 @@ export default {
 .title-icon {
   margin-left: 10px;
   cursor: pointer;
+}
+
+.select-item {
+  cursor: pointer;
+}
+
+.select-con {
+  background-color: #222733;
 }
 </style>
