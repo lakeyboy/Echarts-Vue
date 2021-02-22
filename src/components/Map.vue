@@ -1,6 +1,7 @@
 <template>
   <!-- 模板中 最外层只有 -->
-  <div class="com-container">
+  <!-- dbclick双击 -->
+  <div class="com-container" @dblclick="revertMap">
     <!-- 显示图表的div对象 -->
     <div class="com-chart" ref="map_ref">11</div>
   </div>
@@ -8,12 +9,14 @@
 
 <script>
 import axios from 'axios'
+import { getProvinceMapInfo } from '@/utils/map_utils'
 
 export default {
   data() {
     return {
       chartInstance: null,
-      allData: null
+      allData: null,
+      mapData: {} //获取地图的省份数据
     }
   },
   //生命周期函数，组件创建时执行
@@ -54,15 +57,39 @@ export default {
             areaColor: '#2e72bf',
             bordeeColor: '#333'
           }
+        },
+        legend: {
+          left: '5%',
+          bottom: '5%',
+          orient: 'vertical'
         }
       }
       this.chartInstance.setOption(initOption)
+      // 监听图表点击
+      //arg包含了时间点击的信息
+      this.chartInstance.on('click', async (arg) => {
+        const provinceInfo = getProvinceMapInfo(arg.name)
+        //判断点击的省份的数据是否已经存在
+        if (!this.mapData[provinceInfo.key]) {
+          const ret = await axios.get(
+            'http://localhost:8999' + provinceInfo.path
+          )
+          this.mapData[provinceInfo.key] = ret.data
+          this.$echarts.registerMap(provinceInfo.key, ret.data)
+        }
+
+        const changeOption = {
+          geo: {
+            map: provinceInfo.key
+          }
+        }
+        this.chartInstance.setOption(changeOption)
+      })
     },
     //获取数据
     async getData() {
       const { data: ret } = await this.$http.get('map')
       this.allData = ret
-      console.log(ret)
       this.updateChart()
     },
     // 更新数据
@@ -78,6 +105,10 @@ export default {
         //如果在地图显示散点数据，我们需要给散点图表增加一个配置，coordinateSystem:geo,表示图表使用地图的坐标
         return {
           type: 'effectScatter',
+          rippleEffect: {
+            scale: 5,
+            brushType: 'stroke'
+          },
           name: item.name,
           data: item.children,
           coordinateSystem: 'geo'
@@ -93,10 +124,35 @@ export default {
     },
     //屏幕尺寸变化
     screenAdapter() {
-      const adapterOption = {}
+      const titleFontSize = (this.$refs.map_ref.offsetWidth / 100) * 3.6
+
+      const adapterOption = {
+        title: {
+          textStyle: {
+            fontSize: titleFontSize
+          }
+        },
+        legend: {
+          itemWidth: titleFontSize,
+          itemHeight: titleFontSize,
+          itemGap: titleFontSize,
+          textStyle: {
+            fontSize: titleFontSize
+          }
+        }
+      }
       this.chartInstance.setOption(adapterOption)
       //必须调用实例对象的resize方法，才会实时变化
       this.chartInstance.resize()
+    },
+    // 双击返回地图
+    revertMap() {
+      const revertMap = {
+        geo: {
+          map: 'china'
+        }
+      }
+      this.chartInstance.setOption(revertMap)
     }
   }
 }
