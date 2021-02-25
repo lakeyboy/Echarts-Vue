@@ -16,10 +16,19 @@ export default {
       timerId: null
     }
   },
+  created() {
+    this.$socket.registerCallBack('stockData', this.getData)
+  },
   //生命周期函数，组件创建时执行
   mounted() {
     this.initChart()
-    this.getData()
+    // this.getData()
+    this.$socket.send({
+      action: 'getData',
+      socketType: 'stockData',
+      chartName: 'stock',
+      value: ''
+    })
     //监听屏幕变化
     window.addEventListener('resize', this.screenAdapter)
     //组件创建时 也需要适配屏幕大小
@@ -28,6 +37,8 @@ export default {
   //生命周期函数，组件销毁时执行
   destroyed() {
     window.removeEventListener('resize', this.screenAdapter)
+    this.$socket.unregisterCallBack('stockData')
+
     clearInterval(this.timerId)
   },
   methods: {
@@ -51,8 +62,8 @@ export default {
       })
     },
     //获取数据
-    async getData() {
-      const { data: ret } = await this.$http.get('stock')
+    getData(ret) {
+      // const { data: ret } = await this.$http.get('stock')
       this.allData = ret
 
       this.updateChart()

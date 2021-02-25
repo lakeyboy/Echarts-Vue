@@ -2,6 +2,13 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
+
+import SocketService from '@/utils/socket_service'
+
+// 对服务端进行websocket的连接
+SocketService.Instance.connect()
+// 挂载到vue原型
+Vue.prototype.$socket = SocketService.Instance
 import axios from 'axios'
 // 引入字体样式
 import './assets/font/iconfont.css'

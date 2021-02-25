@@ -17,10 +17,19 @@ export default {
       timerId: null
     }
   },
+  created() {
+    this.$socket.registerCallBack('rankData', this.getData)
+  },
   //生命周期函数，组件创建时执行
   mounted() {
     this.initChart()
-    this.getData()
+    // this.getData()
+    this.$socket.send({
+      action: 'getData',
+      socketType: 'rankData',
+      chartName: 'rank',
+      value: ''
+    })
     //监听屏幕变化
     window.addEventListener('resize', this.screenAdapter)
     //组件创建时 也需要适配屏幕大小
@@ -29,6 +38,8 @@ export default {
   //生命周期函数，组件销毁时执行
   destroyed() {
     window.removeEventListener('resize', this.screenAdapter)
+    this.$socket.unregisterCallBack('rankData')
+
     clearInterval(this.timerId)
   },
   methods: {
@@ -74,8 +85,8 @@ export default {
       })
     },
     //获取数据
-    async getData() {
-      const { data: ret } = await this.$http.get('rank')
+    getData(ret) {
+      // const { data: ret } = await this.$http.get('rank')
       this.allData = ret
 
       //a和b相当于alldata中item,比较时是对比item.value

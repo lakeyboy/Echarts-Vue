@@ -15,10 +15,19 @@ export default {
       timerId: null //定时器标识
     }
   },
+  created() {
+    this.$socket.registerCallBack('sellData', this.getData)
+  },
   //dom元素渲染后执行
   mounted() {
     this.initChart()
-    this.getData()
+    // this.getData()
+    this.$socket.send({
+      action: 'getData',
+      socketType: 'sellData',
+      chartName: 'seller',
+      value: ''
+    })
     // 监听屏幕变化
     window.addEventListener('resize', this.screenAdapter)
     //首次加载完成时，就进行屏幕的适配
@@ -28,6 +37,7 @@ export default {
     clearInterval(this.timerId)
     //组件销毁时，取消监听事件，防止内存泄漏
     window.removeEventListener('resize', this.screenAdapter)
+    this.$socket.unregisterCallBack('sellData')
   },
   methods: {
     //初始化echartd对象,第二个参数是主题
@@ -108,8 +118,8 @@ export default {
       })
     },
     //获取服务器数据
-    async getData() {
-      const { data: ret } = await this.$http.get('seller')
+    getData(ret) {
+      // const { data: ret } = await this.$http.get('seller')
       this.allData = ret
       this.allData.sort((a, b) => {
         return a.value - b.value //从小到大排序，，b-a是从大到小排序

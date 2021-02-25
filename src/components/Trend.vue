@@ -39,10 +39,22 @@ export default {
       titleFontSize: 0
     }
   },
+  created() {
+    this.$socket.registerCallBack('trendData', this.getData)
+  },
   //生命周期函数，组件创建时执行
   mounted() {
     this.initChart()
-    this.getData()
+    this.$socket.send(
+      // 发送服务器数据
+      {
+        action: 'getData',
+        socketType: 'trendData',
+        chartName: 'trend',
+        value: ''
+      }
+    )
+    // this.getData()
     //监听屏幕变化
     window.addEventListener('resize', this.screenAdapter)
     //组件创建时 也需要适配屏幕大小
@@ -51,6 +63,7 @@ export default {
   //生命周期函数，组件销毁时执行
   destroyed() {
     window.removeEventListener('resize', this.screenAdapter)
+    this.$socket.unRegisterCallBack('trendData')
   },
   // 增加计算属性保存下拉菜单  的数据
   computed: {
@@ -122,9 +135,11 @@ export default {
       this.chartInstance.setOption(initOption)
     },
     //获取数据
-    async getData() {
-      const { data: ret } = await this.$http.get('trend')
+    getData(ret) {
+      // ret 就是服务端发给客户端的数据
+      //const { data: ret } = await this.$http.get('trend')
       this.allData = ret
+      console.log(ret)
       this.updateChart()
     },
     // 更新数据

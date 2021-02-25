@@ -23,10 +23,22 @@ export default {
       titleFontSize: 0
     }
   },
+  created() {
+    this.$socket.registerCallBack('hotData', this.getData)
+  },
   //生命周期函数，组件创建时执行
   mounted() {
     this.initChart()
-    this.getData()
+    // this.getData()
+    this.$socket.send(
+      // 发送服务器数据
+      {
+        action: 'getData',
+        socketType: 'hotData',
+        chartName: 'hot',
+        value: ''
+      }
+    )
     //监听屏幕变化
     window.addEventListener('resize', this.screenAdapter)
     //组件创建时 也需要适配屏幕大小
@@ -35,6 +47,7 @@ export default {
   //生命周期函数，组件销毁时执行
   destroyed() {
     window.removeEventListener('resize', this.screenAdapter)
+    this.$socket.unregisterCallBack('hotData')
   },
   computed: {
     catName() {
@@ -112,8 +125,8 @@ export default {
       this.chartInstance.setOption(initOption)
     },
     //获取数据
-    async getData() {
-      const { data: ret } = await this.$http.get('hot')
+    getData(ret) {
+      // const { data: ret } = await this.$http.get('hot')
       this.allData = ret
 
       this.updateChart()
