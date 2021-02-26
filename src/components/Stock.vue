@@ -7,6 +7,8 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+
 export default {
   data() {
     return {
@@ -41,10 +43,21 @@ export default {
 
     clearInterval(this.timerId)
   },
+  computed: {
+    ...mapState(['theme'])
+  },
+  watch: {
+    theme() {
+      this.chartInstance.dispose()
+      this.initChart()
+      this.screenAdapter()
+      this.updateChart()
+    }
+  },
   methods: {
     initChart() {
       //初始化后会返回一个实例对象
-      this.chartInstance = this.$echarts.init(this.$refs.stock_ref, 'chalk')
+      this.chartInstance = this.$echarts.init(this.$refs.stock_ref, this.theme)
       const initOption = {
         title: {
           text: '▍库存和销量分析',
@@ -111,7 +124,7 @@ export default {
           data: [
             {
               //有name,就会显示每个扇区的名字
-              name: item.name + '\n' + item.sales,
+              name: item.name + '\n\n' + item.sales,
               value: item.sales,
               itemStyle: {
                 color: new this.$echarts.graphic.LinearGradient(0, 1, 0, 0, [

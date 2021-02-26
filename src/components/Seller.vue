@@ -5,6 +5,8 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+
 export default {
   data() {
     return {
@@ -39,10 +41,21 @@ export default {
     window.removeEventListener('resize', this.screenAdapter)
     this.$socket.unregisterCallBack('sellData')
   },
+  computed: {
+    ...mapState(['theme'])
+  },
+  watch: {
+    theme() {
+      this.chartInstance.dispose()
+      this.initChart()
+      this.screenAdapter()
+      this.updateChart()
+    }
+  },
   methods: {
     //初始化echartd对象,第二个参数是主题
     initChart() {
-      this.chartInstance = this.$echarts.init(this.$refs.seller_ref, 'chalk')
+      this.chartInstance = this.$echarts.init(this.$refs.seller_ref, this.theme)
       // 分开设置option,首先是初始option的设置
       const initOption = {
         title: {

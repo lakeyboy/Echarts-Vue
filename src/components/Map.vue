@@ -8,6 +8,8 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+
 import axios from 'axios'
 import { getProvinceMapInfo } from '@/utils/map_utils'
 
@@ -45,10 +47,22 @@ export default {
     window.removeEventListener('resize', this.screenAdapter)
     this.$socket.unregisterCallBack('mapData')
   },
+  computed: {
+    ...mapState(['theme'])
+  },
+  watch: {
+    theme() {
+      this.chartInstance.dispose()
+      this.initChart()
+      this.screenAdapter()
+      this.updateChart()
+    }
+  },
   methods: {
     async initChart() {
       //初始化后会返回一个实例对象
-      this.chartInstance = this.$echarts.init(this.$refs.map_ref, 'chalk')
+      //this.theme 为计算属性
+      this.chartInstance = this.$echarts.init(this.$refs.map_ref, this.theme)
       // 因为原来配置过基准地址，原来是服务器的，所以不可以使用this.$http
       //需要从本地服务器获取
       const ret = await axios.get('http://localhost:8999/static/map/china.json')

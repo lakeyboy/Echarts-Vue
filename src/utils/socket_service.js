@@ -65,7 +65,7 @@ export default class SocketService {
         if (action === 'getData') {
           const realData = JSON.parse(recvData.data)
           // console.log(realData)
-          //this指向调用者本身，第二个为参数
+          //this指向调用者本身（当前对象），第二个为参数
           this.callBackMapping[socketType].call(this, realData)
         } else if (action === 'fullScreen') {
           this.callBackMapping[socketType].call(this, recvData)

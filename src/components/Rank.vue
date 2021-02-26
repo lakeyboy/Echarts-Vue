@@ -7,6 +7,8 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+
 export default {
   data() {
     return {
@@ -42,10 +44,21 @@ export default {
 
     clearInterval(this.timerId)
   },
+  computed: {
+    ...mapState(['theme'])
+  },
+  watch: {
+    theme() {
+      this.chartInstance.dispose()
+      this.initChart()
+      this.screenAdapter()
+      this.updateChart()
+    }
+  },
   methods: {
     initChart() {
       //初始化后会返回一个实例对象
-      this.chartInstance = this.$echarts.init(this.$refs.rank_ref, 'chalk')
+      this.chartInstance = this.$echarts.init(this.$refs.rank_ref, this.theme)
       const initOption = {
         title: {
           text: '▍地区销售排行',

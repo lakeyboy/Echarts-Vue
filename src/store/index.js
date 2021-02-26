@@ -5,8 +5,17 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
+    theme: 'chalk'
   },
+  //mutations用于改变state中的值
   mutations: {
+    changeTheme(state) {
+      if (state.theme === 'chalk') {
+        state.theme = 'vintage'
+      } else {
+        state.theme = 'chalk'
+      }
+    }
   },
   actions: {
   },

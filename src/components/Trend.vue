@@ -28,6 +28,9 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+import { getThemeValue } from '@/utils/theme_utils'
+
 export default {
   data() {
     return {
@@ -88,7 +91,8 @@ export default {
     // 设置标题文字大小
     comStyle() {
       return {
-        fontSize: this.titleFontSize + 'px'
+        fontSize: this.titleFontSize + 'px',
+        color: getThemeValue(this.theme).titleColor
       }
     },
     // 控制左边margin
@@ -97,12 +101,21 @@ export default {
         // 左边间距正好是一个字体
         marginLeft: this.titleFontSize / 1.5 + 'px'
       }
+    },
+    ...mapState(['theme'])
+  },
+  watch: {
+    theme() {
+      this.chartInstance.dispose()
+      this.initChart()
+      this.screenAdapter()
+      this.updateChart()
     }
   },
   methods: {
     initChart() {
       //初始化后会返回一个实例对象
-      this.chartInstance = this.$echarts.init(this.$refs.trend_ref, 'chalk')
+      this.chartInstance = this.$echarts.init(this.$refs.trend_ref, this.theme)
       const initOption = {
         //控制坐标轴大小
         grid: {
